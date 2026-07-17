@@ -1,11 +1,6 @@
 {
   "title": "Critical case: sampling present but disabled, no guard anywhere",
-  "setup": {
-    "dev": "On — Final toggle off; clone: true added to cloned events",
-    "sampling": "Present in the pipelines but disabled",
-    "rename": "On, at the end of each pipeline",
-    "guard": "None"
-  },
+  "differs": "Sampling present in the pipelines but disabled. No guard.",
   "description": "THE CRITICAL CASE: prod + dev routes; dev pipelines contain the sampling function but DISABLED; unguarded index/sourcetype overwrite at pipeline end; clone:true is stamped on cloned events by the route but no filter references it. Staged last so KEEP=1 persists this instance.",
   "dests": {
     "prod": {

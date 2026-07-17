@@ -1,11 +1,6 @@
 {
   "title": "Support's suggested fix (guard on the rename step)",
-  "setup": {
-    "dev": "On — Final toggle off; clone: true added to cloned events",
-    "sampling": "Off",
-    "rename": "On, at the end of each pipeline",
-    "guard": "On the rename Function (runs only when clone==true)"
-  },
+  "differs": "Guard on the rename: it runs only when clone==true (support's suggested fix).",
   "description": "Support's fix: route adds clone:true to cloned events; the overwrite eval inside the dev pack runs only when clone==true.",
   "dests": {
     "prod": {

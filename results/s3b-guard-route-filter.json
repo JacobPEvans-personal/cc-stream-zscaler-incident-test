@@ -1,12 +1,7 @@
 {
   "scenario": "s3b-guard-route-filter",
   "title": "What happens if the guard is put in the wrong place",
-  "setup": {
-    "dev": "On — Final toggle off, but clone==true in its Route filter can never match",
-    "sampling": "Off",
-    "rename": "On, at the end of each pipeline",
-    "guard": "In the Route filter (wrong place)"
-  },
+  "differs": "Guard put in the wrong place — in the dev Route's filter, where it can never match, so dev receives nothing.",
   "description": "Mis-scoped guard: clone==true added to the WG dev route FILTER itself. The field only exists on clones created BY this route, so the filter can never match — dev gets zero events.",
   "sent": 1000,
   "dests": {

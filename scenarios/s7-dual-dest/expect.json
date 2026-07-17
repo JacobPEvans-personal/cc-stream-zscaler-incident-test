@@ -1,11 +1,6 @@
 {
   "title": "Old dual-destination shape: two production routes instead of a router",
-  "setup": {
-    "dev": "Not configured",
-    "sampling": "Not applicable",
-    "rename": "Not applicable",
-    "guard": "Not applicable (two production Routes instead of an Output Router)"
-  },
+  "differs": "No dev Route; two production Routes instead of an Output Router.",
   "description": "PROD dual destination shape (Splunk + S3): two same-filter routes, prod-a Final=off to fs-s3, prod-b Final=on to fs-prod. Both should get all 1000.",
   "dests": {
     "prod": {

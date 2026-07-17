@@ -268,7 +268,7 @@ function matches(actual: number, expected: Expectation): boolean {
 export interface ScenarioResult {
   scenario: string;
   title: string;
-  setup?: Record<string, string>;
+  differs?: string;
   description: string;
   sent: number;
   dests: Record<
@@ -287,7 +287,7 @@ export async function runScenario(scenarioDir: string): Promise<ScenarioResult> 
     readFileSync(join(scenarioDir, "expect.json"), "utf8"),
   ) as {
     title?: string;
-    setup?: Record<string, string>;
+    differs?: string;
     description: string;
     dests: Record<string, Record<string, Expectation>>;
   };
@@ -325,7 +325,7 @@ export async function runScenario(scenarioDir: string): Promise<ScenarioResult> 
     return {
       scenario: basename(scenarioDir),
       title: expect.title ?? basename(scenarioDir),
-      setup: expect.setup,
+      differs: expect.differs,
       description: expect.description,
       sent: events.length,
       dests,
@@ -417,14 +417,18 @@ export function reportMarkdown(results: ScenarioResult[]): string {
   const lines: string[] = [
     "# Cribl routing test results",
     "",
-    `In every test below, exactly **${results[0]?.sent.toLocaleString("en-US") ?? "1,000"} events** were sent into a real Cribl`,
-    "instance, and we counted exactly where every single event ended up.",
-    "A live traffic generator (`syslog-zscaler`) also runs the whole time so",
-    "the instance behaves like a real environment — its events are shown as",
-    "“+N live” but only the 1,000 tracked events decide pass/fail.",
-    "Each test's configuration is committed in Cribl before any data flows.",
-    "Each test uses a different routing configuration — the point is to see",
-    "whether the dev/test route can ever make production lose data.",
+    "**The question: can the dev Route ever make production lose data?**",
+    "",
+    `Every test sends **${results[0]?.sent.toLocaleString("en-US") ?? "1,000"} tracked events** into a real Cribl instance and counts`,
+    "exactly where every one ends up. A live traffic generator also runs the",
+    "whole time (shown as “+N live”); only the tracked events decide pass/fail.",
+    "",
+    "**Common to every test that has a dev Route:** the Route's **Final toggle",
+    "is off** — each matched event is cloned into the dev Pack and the",
+    "original continues down the Routes — and the dev Pack **renames",
+    "index/sourcetype** at the end of each pipeline. Each test below changes",
+    "exactly one thing from the incident configuration. All configuration is",
+    "committed in Cribl before any data flows.",
     "",
     "## At a glance",
     "",
@@ -437,34 +441,19 @@ export function reportMarkdown(results: ScenarioResult[]): string {
     "",
   ];
   for (const r of results) {
-    const SETUP_LABELS: Record<string, string> = {
-      dev: "Dev Route",
-      sampling: "Dev sampling",
-      rename: "Renames index/sourcetype",
-      guard: "Guard on the rename",
-    };
     lines.push(
       `## ${r.scenario}`,
       "",
       `**${r.title}**`,
       "",
-      r.description,
-      "",
-      ...(r.setup
-        ? [
-            "| Setting | This test |",
-            "| --- | --- |",
-            ...Object.entries(r.setup).map(
-              ([k, v]) => `| ${SETUP_LABELS[k] ?? k} | ${v} |`,
-            ),
-            "",
-          ]
-        : []),
+      ...(r.differs ? [`This test: ${r.differs}`, ""] : []),
       plainVerdict(r),
       "",
       mermaidFlow(r),
       "",
-      "<details><summary>Detailed counts (click to expand)</summary>",
+      "<details><summary>Details (click to expand)</summary>",
+      "",
+      r.description,
       "",
       `Sent: ${r.sent} events (index=zscaler, sourcetypes round-robin ${SOURCETYPES.join(", ")})`,
       "",

@@ -1,11 +1,6 @@
 {
   "title": "The incident config: does the dev route make production lose data?",
-  "setup": {
-    "dev": "On — Final toggle off (each matched event is cloned into the dev Pack; the original continues down the Routes)",
-    "sampling": "Off",
-    "rename": "On, at the end of each pipeline",
-    "guard": "None"
-  },
+  "differs": "Dev Route on. No sampling, no guard — the exact incident configuration.",
   "description": "THE INCIDENT: dev route (Final=off, no clone marker), dev pack overwrites index/sourcetype at pipeline end, sampling OFF. If clone bleed were real, prod collapses; if Cribl clones deeply, prod stays 1000.",
   "dests": {
     "prod": {
