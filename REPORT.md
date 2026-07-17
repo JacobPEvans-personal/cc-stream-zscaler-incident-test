@@ -72,8 +72,8 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 | prod | zscaler/zscalernss-fw | 333 | 333 |
 | prod | zscaler/zscalernss-web | 334 | 334 |
 | dev | zscaler_dev/zscalernss-dns:clone | 33 | 17–67 |
-| dev | zscaler_dev/zscalernss-fw:clone | 33 | 17–67 |
-| dev | zscaler_dev/zscalernss-web:clone | 34 | 17–67 |
+| dev | zscaler_dev/zscalernss-fw:clone | 34 | 17–67 |
+| dev | zscaler_dev/zscalernss-web:clone | 33 | 17–67 |
 | default | (none) | 0 | 0 |
 
 ## s5-guard-pack-routes — ✅ pass

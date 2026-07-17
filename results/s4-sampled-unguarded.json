@@ -17,8 +17,8 @@
     },
     "dev": {
       "actual": {
-        "zscaler_dev/zscalernss-web:clone": 34,
-        "zscaler_dev/zscalernss-fw:clone": 33,
+        "zscaler_dev/zscalernss-fw:clone": 34,
+        "zscaler_dev/zscalernss-web:clone": 33,
         "zscaler_dev/zscalernss-dns:clone": 33
       },
       "expected": {
