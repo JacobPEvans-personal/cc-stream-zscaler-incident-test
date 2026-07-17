@@ -1,0 +1,7 @@
+{
+  "name": "dev-pack",
+  "version": "1.0.0",
+  "displayName": "Zscaler DEV replica (dev-sampled-off)",
+  "description": "Dev copy of the Zscaler pack replica; sampling function PRESENT but disabled, unguarded index/sourcetype overwrite at pipeline end.",
+  "minLogStreamVersion": "4.16.0"
+}
