@@ -1,7 +1,7 @@
 {
   "scenario": "s4-sampled-unguarded",
   "title": "The pre-incident state: dev sampling 1-in-10 turned ON",
-  "differs": "Sampling on (1 in 10) — the pre-incident state.",
+  "differs": "Same as s2 (Final flag off on the dev Route), plus sampling on (1 in 10) — the pre-incident state.",
   "description": "Pre-incident steady state: unguarded overwrite but sampling 1:10 as first dev pipeline function. Only ~10% of clones survive to dev.",
   "sent": 1000,
   "dests": {

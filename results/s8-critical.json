@@ -1,7 +1,7 @@
 {
   "scenario": "s8-critical",
   "title": "Critical case: sampling present but disabled, no guard anywhere",
-  "differs": "Sampling present in the pipelines but disabled. No guard.",
+  "differs": "Same as s2 (Final flag off on the dev Route), but sampling is present in the pipelines and disabled. No guard.",
   "description": "THE CRITICAL CASE: prod + dev routes; dev pipelines contain the sampling function but DISABLED; unguarded index/sourcetype overwrite at pipeline end; clone:true is stamped on cloned events by the route but no filter references it. Staged last so KEEP=1 persists this instance.",
   "sent": 1000,
   "dests": {

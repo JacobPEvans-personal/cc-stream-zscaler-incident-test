@@ -6,7 +6,7 @@ Every test sends **1,000 tracked events** into a real Cribl instance and counts
 exactly where every one ends up. A live traffic generator also runs the
 whole time (shown as “+N live”); only the tracked events decide pass/fail.
 
-**Common to every test that has a dev Route:** the Route's **Final toggle
+**Common to every test that has a dev Route:** the Route's **Final flag
 is off** — each matched event is cloned into the dev Pack and the
 original continues down the Routes — and the dev Pack **renames
 index/sourcetype** at the end of each pipeline. Each test below changes
@@ -76,7 +76,7 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 **The incident config: does the dev route make production lose data?**
 
-This test: Dev Route on. No sampling, no guard — the exact incident configuration.
+This test: Dev Route on with the Final flag off. No sampling, no guard — the exact incident configuration.
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
@@ -100,7 +100,7 @@ flowchart LR
 
 <details><summary>Details (click to expand)</summary>
 
-THE INCIDENT: dev route (Final=off, no clone marker), dev pack overwrites index/sourcetype at pipeline end, sampling OFF. If clone bleed were real, prod collapses; if Cribl clones deeply, prod stays 1000.
+THE INCIDENT: dev route (Final flag off, no clone marker), dev pack overwrites index/sourcetype at pipeline end, sampling OFF. If clone bleed were real, prod collapses; if Cribl clones deeply, prod stays 1000.
 
 Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscalernss-fw, zscalernss-dns)
 
@@ -123,7 +123,7 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 **Support's suggested fix (guard on the rename step)**
 
-This test: Guard on the rename: it runs only when clone==true (support's suggested fix).
+This test: Same as s2 (Final flag off on the dev Route), plus a guard on the rename: it runs only when clone==true (support's suggested fix).
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
@@ -170,7 +170,7 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 **What happens if the guard is put in the wrong place**
 
-This test: Guard put in the wrong place — in the dev Route's filter, where it can never match, so dev receives nothing.
+This test: Same as s2 (Final flag off on the dev Route), but the guard is in the wrong place — the dev Route's filter, where it can never match, so dev receives nothing.
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
@@ -215,7 +215,7 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 **The pre-incident state: dev sampling 1-in-10 turned ON**
 
-This test: Sampling on (1 in 10) — the pre-incident state.
+This test: Same as s2 (Final flag off on the dev Route), plus sampling on (1 in 10) — the pre-incident state.
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
@@ -262,7 +262,7 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 **Alternative guard placement (on the pack's internal routes)**
 
-This test: Guard on the dev Pack's internal Routes instead of the rename Function.
+This test: Same as s2 (Final flag off on the dev Route), plus a guard on the dev Pack's internal Routes instead of the rename Function.
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
@@ -309,7 +309,7 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 **UI 'Add clone' clicked but left empty**
 
-This test: UI Add Clone clicked but left empty (adds no fields to the clones).
+This test: Same as s2 (Final flag off on the dev Route), but UI Add Clone was clicked and left empty (adds no fields to the clones).
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
@@ -356,7 +356,7 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 **Old dual-destination shape: two production routes instead of a router**
 
-This test: No dev Route; two production Routes instead of an Output Router.
+This test: No dev Route. Two same-filter production Routes instead of an Output Router: first to S3 with the Final flag off, then to Splunk with the Final flag on.
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
@@ -380,7 +380,7 @@ flowchart LR
 
 <details><summary>Details (click to expand)</summary>
 
-PROD dual destination shape (Splunk + S3): two same-filter routes, prod-a Final=off to fs-s3, prod-b Final=on to fs-prod. Both should get all 1000.
+PROD dual destination shape (Splunk + S3): two same-filter routes, prod-a Final flag off to fs-s3, prod-b Final flag on to fs-prod. Both should get all 1000.
 
 Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscalernss-fw, zscalernss-dns)
 
@@ -401,7 +401,7 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 **Critical case: sampling present but disabled, no guard anywhere**
 
-This test: Sampling present in the pipelines but disabled. No guard.
+This test: Same as s2 (Final flag off on the dev Route), but sampling is present in the pipelines and disabled. No guard.
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 

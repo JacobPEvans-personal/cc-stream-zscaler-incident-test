@@ -1,7 +1,7 @@
 {
   "scenario": "s5-guard-pack-routes",
   "title": "Alternative guard placement (on the pack's internal routes)",
-  "differs": "Guard on the dev Pack's internal Routes instead of the rename Function.",
+  "differs": "Same as s2 (Final flag off on the dev Route), plus a guard on the dev Pack's internal Routes instead of the rename Function.",
   "description": "Guard placed on the dev pack's INTERNAL route filters (sourcetype && clone==true) instead of the eval. All entrants are clones, so behavior should match s3a.",
   "sent": 1000,
   "dests": {

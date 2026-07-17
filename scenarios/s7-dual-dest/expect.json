@@ -1,7 +1,7 @@
 {
   "title": "Old dual-destination shape: two production routes instead of a router",
-  "differs": "No dev Route; two production Routes instead of an Output Router.",
-  "description": "PROD dual destination shape (Splunk + S3): two same-filter routes, prod-a Final=off to fs-s3, prod-b Final=on to fs-prod. Both should get all 1000.",
+  "differs": "No dev Route. Two same-filter production Routes instead of an Output Router: first to S3 with the Final flag off, then to Splunk with the Final flag on.",
+  "description": "PROD dual destination shape (Splunk + S3): two same-filter routes, prod-a Final flag off to fs-s3, prod-b Final flag on to fs-prod. Both should get all 1000.",
   "dests": {
     "prod": {
       "zscaler/zscalernss-web": 334,

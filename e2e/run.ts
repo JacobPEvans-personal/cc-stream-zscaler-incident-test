@@ -423,7 +423,7 @@ export function reportMarkdown(results: ScenarioResult[]): string {
     "exactly where every one ends up. A live traffic generator also runs the",
     "whole time (shown as “+N live”); only the tracked events decide pass/fail.",
     "",
-    "**Common to every test that has a dev Route:** the Route's **Final toggle",
+    "**Common to every test that has a dev Route:** the Route's **Final flag",
     "is off** — each matched event is cloned into the dev Pack and the",
     "original continues down the Routes — and the dev Pack **renames",
     "index/sourcetype** at the end of each pipeline. Each test below changes",

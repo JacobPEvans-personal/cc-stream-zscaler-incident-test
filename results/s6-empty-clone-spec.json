@@ -1,7 +1,7 @@
 {
   "scenario": "s6-empty-clone-spec",
   "title": "UI 'Add clone' clicked but left empty",
-  "differs": "UI Add Clone clicked but left empty (adds no fields to the clones).",
+  "differs": "Same as s2 (Final flag off on the dev Route), but UI Add Clone was clicked and left empty (adds no fields to the clones).",
   "description": "UI 'Add clone' left empty: clones: [{}] on the dev route (adds no fields), unguarded dev pack. Distinguishes empty-clone-spec semantics from clones: [].",
   "sent": 1000,
   "dests": {

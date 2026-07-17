@@ -23,7 +23,7 @@ exact setup in a disposable sandbox and measures what actually happens.
 }}}%%
 flowchart LR
   Z["Zscaler logs<br/>(1,000 test events)"] --> WG{"Cribl Routes"}
-  WG -->|"clone of every event<br/>(Final toggle off)"| DEV["Dev Route<br/>(renames index/sourcetype)"]
+  WG -->|"clone of every event<br/>(Final flag off)"| DEV["Dev Route<br/>(renames index/sourcetype)"]
   DEV --> DSPL["Dev (Splunk)"]
   WG -->|"original events"| PROD["Production Route"]
   PROD --> RTR{{"Output Router"}}

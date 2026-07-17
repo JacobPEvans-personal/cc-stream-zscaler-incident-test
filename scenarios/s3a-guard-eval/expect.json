@@ -1,6 +1,6 @@
 {
   "title": "Support's suggested fix (guard on the rename step)",
-  "differs": "Guard on the rename: it runs only when clone==true (support's suggested fix).",
+  "differs": "Same as s2 (Final flag off on the dev Route), plus a guard on the rename: it runs only when clone==true (support's suggested fix).",
   "description": "Support's fix: route adds clone:true to cloned events; the overwrite eval inside the dev pack runs only when clone==true.",
   "dests": {
     "prod": {

@@ -1,8 +1,8 @@
 {
   "scenario": "s2-incident-unguarded",
   "title": "The incident config: does the dev route make production lose data?",
-  "differs": "Dev Route on. No sampling, no guard — the exact incident configuration.",
-  "description": "THE INCIDENT: dev route (Final=off, no clone marker), dev pack overwrites index/sourcetype at pipeline end, sampling OFF. If clone bleed were real, prod collapses; if Cribl clones deeply, prod stays 1000.",
+  "differs": "Dev Route on with the Final flag off. No sampling, no guard — the exact incident configuration.",
+  "description": "THE INCIDENT: dev route (Final flag off, no clone marker), dev pack overwrites index/sourcetype at pipeline end, sampling OFF. If clone bleed were real, prod collapses; if Cribl clones deeply, prod stays 1000.",
   "sent": 1000,
   "dests": {
     "prod": {
