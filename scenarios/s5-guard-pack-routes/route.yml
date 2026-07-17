@@ -36,7 +36,7 @@ routes:
     name: "Key Route 2 (PROD)"
     filter: "index=='zscaler' && sourcetype.startsWith('zscalernss-')"
     pipeline: "pack:prod-pack"
-    output: "fs-prod"
+    output: "prod-router"
     final: true
   -
     clones: []

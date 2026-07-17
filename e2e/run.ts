@@ -248,6 +248,8 @@ function matches(actual: number, expected: Expectation): boolean {
 
 export interface ScenarioResult {
   scenario: string;
+  title: string;
+  setup?: Record<string, string>;
   description: string;
   sent: number;
   dests: Record<
@@ -260,7 +262,12 @@ export interface ScenarioResult {
 export async function runScenario(scenarioDir: string): Promise<ScenarioResult> {
   const expect = JSON.parse(
     readFileSync(join(scenarioDir, "expect.json"), "utf8"),
-  ) as { description: string; dests: Record<string, Record<string, Expectation>> };
+  ) as {
+    title?: string;
+    setup?: Record<string, string>;
+    description: string;
+    dests: Record<string, Record<string, Expectation>>;
+  };
   const destNames = Object.keys(expect.dests);
   const outDir = mkdtempSync(join(tmpdir(), "cribl-incident-"));
   startCribl(scenarioDir, outDir);
@@ -283,6 +290,8 @@ export async function runScenario(scenarioDir: string): Promise<ScenarioResult> 
     }
     return {
       scenario: basename(scenarioDir),
+      title: expect.title ?? basename(scenarioDir),
+      setup: expect.setup,
       description: expect.description,
       sent: events.length,
       dests,
@@ -310,13 +319,95 @@ function fmtExpected(e: Expectation): string {
   return Array.isArray(e) ? `${e[0]}–${e[1]}` : String(e);
 }
 
-export function reportMarkdown(results: ScenarioResult[]): string {
-  const lines: string[] = ["# Incident reproduction report", ""];
-  for (const r of results) {
+// Human-friendly destination labels for the plain-language report.
+const DEST_LABELS: Record<string, string> = {
+  prod: "Production (Splunk)",
+  s3: "Archive (S3)",
+  dev: "Dev / test (Splunk)",
+  default: "Lost — matched no route",
+};
+
+const total = (counts: Record<string, number>): number =>
+  Object.values(counts).reduce((a, b) => a + b, 0);
+
+// One flow picture per scenario: events in on the left, where they ended up
+// on the right. Renders natively on GitHub — no tooling needed to read it.
+function mermaidFlow(r: ScenarioResult): string {
+  const lines = [
+    "```mermaid",
+    "flowchart LR",
+    `  IN(["${r.sent.toLocaleString("en-US")} events sent"]) --> C{"Cribl routing"}`,
+  ];
+  for (const [dest, { actual, expected }] of Object.entries(r.dests)) {
+    const got = total(actual);
+    const ok = Object.keys({ ...actual, ...expected }).every((k) =>
+      matches(actual[k] ?? 0, expected[k] ?? 0),
+    );
     lines.push(
-      `## ${r.scenario} — ${r.pass ? "✅ pass" : "❌ FAIL"}`,
+      `  C -->|"${got.toLocaleString("en-US")}"| ${dest}["${ok ? "" : "⚠️ "}${DEST_LABELS[dest] ?? dest}"]`,
+      `  style ${dest} ${ok ? (dest === "default" ? "fill:#eee,stroke:#999" : "fill:#d3f9d8,stroke:#2b8a3e") : "fill:#ffe3e3,stroke:#c92a2a"}`,
+    );
+  }
+  lines.push("```");
+  return lines.join("\n");
+}
+
+function plainVerdict(r: ScenarioResult): string {
+  const prodGot = total(r.dests.prod?.actual ?? {});
+  const lost = total(r.dests.default?.actual ?? {});
+  if (!r.pass) return "❌ **Something unexpected happened — see the numbers below.**";
+  if (lost > 0) return `⚠️ ${lost} events matched no route.`;
+  return `✅ **No production data was lost.** Production received ${prodGot.toLocaleString("en-US")} of ${r.sent.toLocaleString("en-US")} events sent.`;
+}
+
+export function reportMarkdown(results: ScenarioResult[]): string {
+  const lines: string[] = [
+    "# Cribl routing test results",
+    "",
+    `In every test below, exactly **${results[0]?.sent.toLocaleString("en-US") ?? "1,000"} events** were sent into a real Cribl`,
+    "instance, and we counted exactly where every single event ended up.",
+    "Each test uses a different routing configuration — the point is to see",
+    "whether the dev/test route can ever make production lose data.",
+    "",
+    "## At a glance",
+    "",
+    "| Test | Question it answers | Result |",
+    "| --- | --- | --- |",
+    ...results.map(
+      (r) =>
+        `| [${r.scenario}](#${r.scenario.replaceAll(".", "")}) | ${r.title} | ${r.pass ? "✅ pass" : "❌ FAIL"} |`,
+    ),
+    "",
+  ];
+  for (const r of results) {
+    const SETUP_LABELS: Record<string, string> = {
+      dev: "Dev/test route",
+      sampling: "Dev sampling",
+      rename: "Dev renames index/sourcetype",
+      guard: "Guard on the rename",
+    };
+    lines.push(
+      `## ${r.scenario}`,
+      "",
+      `**${r.title}**`,
       "",
       r.description,
+      "",
+      ...(r.setup
+        ? [
+            "| Setting | This test |",
+            "| --- | --- |",
+            ...Object.entries(r.setup).map(
+              ([k, v]) => `| ${SETUP_LABELS[k] ?? k} | ${v} |`,
+            ),
+            "",
+          ]
+        : []),
+      plainVerdict(r),
+      "",
+      mermaidFlow(r),
+      "",
+      "<details><summary>Detailed counts (click to expand)</summary>",
       "",
       `Sent: ${r.sent} events (index=zscaler, sourcetypes round-robin ${SOURCETYPES.join(", ")})`,
       "",
@@ -333,7 +424,7 @@ export function reportMarkdown(results: ScenarioResult[]): string {
         );
       }
     }
-    lines.push("");
+    lines.push("", "</details>", "");
   }
   return lines.join("\n");
 }

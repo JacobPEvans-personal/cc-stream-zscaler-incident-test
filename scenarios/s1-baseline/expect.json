@@ -1,7 +1,19 @@
 {
+  "title": "Control test: production alone, nothing else configured",
+  "setup": {
+    "dev": "❌ absent",
+    "sampling": "—",
+    "rename": "—",
+    "guard": "—"
+  },
   "description": "PROD only, no dev route. Control: 1000 in, 1000 out to prod untouched.",
   "dests": {
     "prod": {
+      "zscaler/zscalernss-web": 334,
+      "zscaler/zscalernss-fw": 333,
+      "zscaler/zscalernss-dns": 333
+    },
+    "s3": {
       "zscaler/zscalernss-web": 334,
       "zscaler/zscalernss-fw": 333,
       "zscaler/zscalernss-dns": 333

@@ -1,7 +1,19 @@
 {
+  "title": "Critical case: sampling present but disabled, no guard anywhere",
+  "setup": {
+    "dev": "✅ on, copies every event (clone marker set)",
+    "sampling": "⚪ present but disabled",
+    "rename": "✅ on",
+    "guard": "❌ none"
+  },
   "description": "THE CRITICAL CASE: prod + dev routes; dev pipelines contain the sampling function but DISABLED; unguarded index/sourcetype overwrite at pipeline end; clone:true is stamped on cloned events by the route but no filter references it. Staged last so KEEP=1 persists this instance.",
   "dests": {
     "prod": {
+      "zscaler/zscalernss-web": 334,
+      "zscaler/zscalernss-fw": 333,
+      "zscaler/zscalernss-dns": 333
+    },
+    "s3": {
       "zscaler/zscalernss-web": 334,
       "zscaler/zscalernss-fw": 333,
       "zscaler/zscalernss-dns": 333

@@ -1,9 +1,28 @@
 {
   "scenario": "s2-incident-unguarded",
+  "title": "The incident config: does the dev route make production lose data?",
+  "setup": {
+    "dev": "✅ on, copies every event",
+    "sampling": "🔴 off",
+    "rename": "✅ on",
+    "guard": "❌ none"
+  },
   "description": "THE INCIDENT: dev route (Final=off, no clone marker), dev pack overwrites index/sourcetype at pipeline end, sampling OFF. If clone bleed were real, prod collapses; if Cribl clones deeply, prod stays 1000.",
   "sent": 1000,
   "dests": {
     "prod": {
+      "actual": {
+        "zscaler/zscalernss-web": 334,
+        "zscaler/zscalernss-fw": 333,
+        "zscaler/zscalernss-dns": 333
+      },
+      "expected": {
+        "zscaler/zscalernss-web": 334,
+        "zscaler/zscalernss-fw": 333,
+        "zscaler/zscalernss-dns": 333
+      }
+    },
+    "s3": {
       "actual": {
         "zscaler/zscalernss-web": 334,
         "zscaler/zscalernss-fw": 333,

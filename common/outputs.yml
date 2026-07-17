@@ -1,9 +1,20 @@
 # Filesystem stand-ins for the real destinations:
-#   fs-prod    = Splunk prod index (Key Route 2 primary dest)
-#   fs-s3      = AWS S3 archive (Key Route 2 second dest, s7 only)
-#   fs-dev     = dev Splunk index (Key Route 1 dest)
-#   fs-default = default route (events that matched nothing — the "lost" bucket)
+#   prod-router = Output Router used by Key Route 2 (PROD), fanning out to both
+#                 real prod destinations, matching the production environment
+#   fs-prod     = Splunk prod index (router branch 1)
+#   fs-s3       = AWS S3 archive (router branch 2)
+#   fs-dev      = dev Splunk index (Key Route 1 dest)
+#   fs-default  = default route (events that matched nothing — the "lost" bucket)
 outputs:
+  prod-router:
+    type: router
+    rules:
+      - filter: "true"
+        output: fs-s3
+        final: false
+      - filter: "true"
+        output: fs-prod
+        final: true
   fs-prod:
     type: filesystem
     destPath: /tmp/out/prod

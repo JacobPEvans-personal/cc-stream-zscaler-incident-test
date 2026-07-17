@@ -1,7 +1,19 @@
 {
+  "title": "The pre-incident state: dev sampling 1-in-10 turned ON",
+  "setup": {
+    "dev": "✅ on, copies every event",
+    "sampling": "🟢 1-in-10",
+    "rename": "✅ on",
+    "guard": "❌ none"
+  },
   "description": "Pre-incident steady state: unguarded overwrite but sampling 1:10 as first dev pipeline function. Only ~10% of clones survive to dev.",
   "dests": {
     "prod": {
+      "zscaler/zscalernss-web": 334,
+      "zscaler/zscalernss-fw": 333,
+      "zscaler/zscalernss-dns": 333
+    },
+    "s3": {
       "zscaler/zscalernss-web": 334,
       "zscaler/zscalernss-fw": 333,
       "zscaler/zscalernss-dns": 333
