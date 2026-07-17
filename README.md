@@ -45,6 +45,31 @@ KEEP=1 node --experimental-strip-types e2e/run.ts scenarios/s2-incident-unguarde
 The next run recycles the container; remove it manually with
 `docker rm -f cribl-incident`.
 
+### Skipping the registration wizard on kept instances
+
+If `common/first-login/` exists (gitignored — contains your email, the
+instance secret, and a crackable password hash), `KEEP=1` runs mount it into
+the container's auth dir, so the kept instance is pre-registered and uses
+your chosen admin password instead of forcing the first-login flow:
+
+```bash
+KEEP=1 CRIBL_PASSWORD='<your password>' node --experimental-strip-types e2e/run.ts scenarios/s8-critical
+```
+
+`CRIBL_PASSWORD` is required because the runner's own API calls (pack
+installs) must authenticate with the real password once the default
+admin/admin is replaced.
+
+To (re)capture the state after registering / changing the password in a kept
+container — all three files must come from the **same** container, because
+the password hash only validates alongside that instance's `cribl.secret`:
+
+```bash
+for f in users.json cribl.secret 676f6174733432.dat; do
+  docker cp cribl-incident:/opt/cribl/local/cribl/auth/$f common/first-login/
+done
+```
+
 ### Inspecting CI runs
 
 The workflow takes two `workflow_dispatch` inputs:

@@ -44,13 +44,31 @@ function startCribl(scenarioDir: string, outDir: string): void {
   const mounts = [
     "-v",
     `${realpathSync("common/inputs.yml")}:/opt/cribl/local/cribl/inputs.yml`,
+  ];
+  // KEEP runs mount the captured first-login state so the kept instance
+  // skips the registration wizard and forced password change. Capture all
+  // three from a registered container (the hash only validates alongside the
+  // SAME instance's cribl.secret):
+  //   for f in users.json cribl.secret 676f6174733432.dat; do
+  //     docker cp cribl-incident:/opt/cribl/local/cribl/auth/$f common/first-login/; done
+  // The dir is gitignored (email, instance secret, crackable hash — never
+  // commit). With it mounted admin/admin no longer works: set CRIBL_PASSWORD.
+  if (process.env.KEEP === "1" && existsSync("common/first-login/users.json")) {
+    for (const f of readdirSync("common/first-login")) {
+      mounts.push(
+        "-v",
+        `${realpathSync(join("common/first-login", f))}:/opt/cribl/local/cribl/auth/${f}`,
+      );
+    }
+  }
+  mounts.push(
     "-v",
     `${realpathSync("common/outputs.yml")}:/opt/cribl/local/cribl/outputs.yml`,
     "-v",
     `${realpathSync(join(scenarioDir, "route.yml"))}:/opt/cribl/local/cribl/pipelines/route.yml`,
     "-v",
     `${realpathSync("common/pipelines/passthrough")}:/opt/cribl/local/cribl/pipelines/passthrough`,
-  ];
+  );
   docker(
     "run",
     "-d",
@@ -93,8 +111,15 @@ async function installPacks(scenarioDir: string): Promise<void> {
   const login = await fetch(`${base}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: "admin", password: "admin" }),
+    body: JSON.stringify({
+      username: "admin",
+      password: process.env.CRIBL_PASSWORD ?? "admin",
+    }),
   });
+  if (!login.ok)
+    throw new Error(
+      "Cribl API login failed — if common/first-login/ is mounted (KEEP=1), set CRIBL_PASSWORD to the admin password you chose during registration",
+    );
   const { token } = (await login.json()) as { token: string };
   const auth = { Authorization: `Bearer ${token}` };
   for (const packId of readdirSync(packsDir)) {
@@ -265,11 +290,11 @@ export async function runScenario(scenarioDir: string): Promise<ScenarioResult> 
     };
   } finally {
     // KEEP=1 leaves the last scenario's container running so you can log in
-    // at http://localhost:19000 (admin/admin) and inspect routes/pipelines.
+    // at http://localhost:19000 and inspect routes/pipelines.
     // The next scenario (or run) still recycles it via `docker rm -f`.
     if (process.env.KEEP === "1") {
       console.error(
-        `container ${CONTAINER} kept alive — Cribl UI: http://localhost:${API_PORT} (admin/admin)`,
+        `container ${CONTAINER} kept alive — Cribl UI: http://localhost:${API_PORT}`,
       );
     } else {
       try {
