@@ -1,0 +1,28 @@
+{
+  "scenario": "s1-baseline",
+  "description": "PROD only, no dev route. Control: 1000 in, 1000 out to prod untouched.",
+  "sent": 1000,
+  "dests": {
+    "prod": {
+      "actual": {
+        "zscaler/zscalernss-web": 334,
+        "zscaler/zscalernss-fw": 333,
+        "zscaler/zscalernss-dns": 333
+      },
+      "expected": {
+        "zscaler/zscalernss-web": 334,
+        "zscaler/zscalernss-fw": 333,
+        "zscaler/zscalernss-dns": 333
+      }
+    },
+    "dev": {
+      "actual": {},
+      "expected": {}
+    },
+    "default": {
+      "actual": {},
+      "expected": {}
+    }
+  },
+  "pass": true
+}

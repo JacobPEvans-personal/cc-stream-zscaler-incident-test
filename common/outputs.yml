@@ -1,0 +1,34 @@
+# Filesystem stand-ins for the real destinations:
+#   fs-prod    = Splunk prod index (Key Route 2 primary dest)
+#   fs-s3      = AWS S3 archive (Key Route 2 second dest, s7 only)
+#   fs-dev     = dev Splunk index (Key Route 1 dest)
+#   fs-default = default route (events that matched nothing — the "lost" bucket)
+outputs:
+  fs-prod:
+    type: filesystem
+    destPath: /tmp/out/prod
+    format: json
+    maxFileOpenTimeSec: 10
+    maxFileIdleTimeSec: 10
+    baseFileName: events
+  fs-s3:
+    type: filesystem
+    destPath: /tmp/out/s3
+    format: json
+    maxFileOpenTimeSec: 10
+    maxFileIdleTimeSec: 10
+    baseFileName: events
+  fs-dev:
+    type: filesystem
+    destPath: /tmp/out/dev
+    format: json
+    maxFileOpenTimeSec: 10
+    maxFileIdleTimeSec: 10
+    baseFileName: events
+  fs-default:
+    type: filesystem
+    destPath: /tmp/out/default
+    format: json
+    maxFileOpenTimeSec: 10
+    maxFileIdleTimeSec: 10
+    baseFileName: events

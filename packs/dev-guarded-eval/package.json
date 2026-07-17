@@ -1,0 +1,7 @@
+{
+  "name": "dev-pack",
+  "version": "1.0.0",
+  "displayName": "Zscaler DEV replica (dev-guarded-eval)",
+  "description": "Dev copy of the Zscaler pack replica; overwrites index/sourcetype at pipeline end. Variant: dev-guarded-eval",
+  "minLogStreamVersion": "4.16.0"
+}

@@ -1,0 +1,58 @@
+# s2-incident-unguarded: THE INCIDENT: dev route (Final=off, no clone marker), dev pack overwrites index/sourcetype at pipeline end, sampling OFF. If clone bleed were real, prod collapses; if Cribl clones deeply, prod stays 1000.
+id: default
+groups: {}
+routes:
+  -
+    clones: []
+    disabled: false
+    id: "decoy-1"
+    name: "decoy-1"
+    filter: "sourcetype=='decoy-a'"
+    pipeline: "passthrough"
+    output: "fs-default"
+    final: true
+  -
+    clones: []
+    disabled: false
+    id: "decoy-2"
+    name: "decoy-2"
+    filter: "host=='decoy-b'"
+    pipeline: "passthrough"
+    output: "fs-default"
+    final: true
+  -
+    clones: []
+    disabled: false
+    id: "dev-route"
+    name: "Key Route 1 (DEV)"
+    filter: "index=='zscaler' && sourcetype.startsWith('zscalernss-')"
+    pipeline: "pack:dev-pack"
+    output: "fs-dev"
+    final: false
+  -
+    clones: []
+    disabled: false
+    id: "prod-route"
+    name: "Key Route 2 (PROD)"
+    filter: "index=='zscaler' && sourcetype.startsWith('zscalernss-')"
+    pipeline: "pack:prod-pack"
+    output: "fs-prod"
+    final: true
+  -
+    clones: []
+    disabled: false
+    id: "decoy-3"
+    name: "decoy-3"
+    filter: "source=='decoy-c'"
+    pipeline: "passthrough"
+    output: "fs-default"
+    final: true
+  -
+    clones: []
+    disabled: false
+    id: "default"
+    name: "default"
+    filter: "true"
+    pipeline: "passthrough"
+    output: "fs-default"
+    final: true

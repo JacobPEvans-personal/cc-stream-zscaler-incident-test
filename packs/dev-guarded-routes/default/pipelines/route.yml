@@ -1,0 +1,49 @@
+# Internal pack routes, faithful to the official cribl-zscaler pack shape:
+# final: true with an empty clone spec (clones: [{}]) on each sourcetype route,
+# exactly as the real pack ships.
+id: default
+groups: {}
+routes:
+  - id: drop-empty
+    name: Drop empty events
+    filter: "!_raw || _raw.length===0"
+    pipeline: drop
+    output: default
+    final: true
+    disabled: false
+    clones: []
+  - id: web
+    name: Web Logs
+    filter: sourcetype.includes('zscalernss-web') && clone==true
+    pipeline: web
+    output: default
+    final: true
+    disabled: false
+    clones:
+      - {}
+  - id: fw
+    name: Firewall Logs
+    filter: sourcetype.includes('zscalernss-fw') && clone==true
+    pipeline: fw
+    output: default
+    final: true
+    disabled: false
+    clones:
+      - {}
+  - id: dns
+    name: DNS Logs
+    filter: sourcetype.includes('zscalernss-dns') && clone==true
+    pipeline: dns
+    output: default
+    final: true
+    disabled: false
+    clones:
+      - {}
+  - id: default
+    name: default
+    filter: "!cribl_pipe"
+    pipeline: passthru
+    output: default
+    final: true
+    disabled: false
+    clones: []

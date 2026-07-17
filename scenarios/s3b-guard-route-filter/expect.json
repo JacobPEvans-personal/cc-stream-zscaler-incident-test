@@ -1,0 +1,12 @@
+{
+  "description": "Mis-scoped guard: clone==true added to the WG dev route FILTER itself. The field only exists on clones created BY this route, so the filter can never match — dev gets zero events.",
+  "dests": {
+    "prod": {
+      "zscaler/zscalernss-web": 334,
+      "zscaler/zscalernss-fw": 333,
+      "zscaler/zscalernss-dns": 333
+    },
+    "dev": {},
+    "default": {}
+  }
+}

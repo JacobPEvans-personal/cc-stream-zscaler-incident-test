@@ -1,0 +1,36 @@
+{
+  "scenario": "s3a-guard-eval",
+  "description": "Support's fix: route adds clone:true to cloned events; the overwrite eval inside the dev pack runs only when clone==true.",
+  "sent": 1000,
+  "dests": {
+    "prod": {
+      "actual": {
+        "zscaler/zscalernss-web": 334,
+        "zscaler/zscalernss-fw": 333,
+        "zscaler/zscalernss-dns": 333
+      },
+      "expected": {
+        "zscaler/zscalernss-web": 334,
+        "zscaler/zscalernss-fw": 333,
+        "zscaler/zscalernss-dns": 333
+      }
+    },
+    "dev": {
+      "actual": {
+        "zscaler_dev/zscalernss-web:clone": 334,
+        "zscaler_dev/zscalernss-fw:clone": 333,
+        "zscaler_dev/zscalernss-dns:clone": 333
+      },
+      "expected": {
+        "zscaler_dev/zscalernss-web:clone": 334,
+        "zscaler_dev/zscalernss-fw:clone": 333,
+        "zscaler_dev/zscalernss-dns:clone": 333
+      }
+    },
+    "default": {
+      "actual": {},
+      "expected": {}
+    }
+  },
+  "pass": true
+}

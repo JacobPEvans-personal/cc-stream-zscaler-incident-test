@@ -1,0 +1,25 @@
+{
+  "description": "Pre-incident steady state: unguarded overwrite but sampling 1:10 as first dev pipeline function. Only ~10% of clones survive to dev.",
+  "dests": {
+    "prod": {
+      "zscaler/zscalernss-web": 334,
+      "zscaler/zscalernss-fw": 333,
+      "zscaler/zscalernss-dns": 333
+    },
+    "dev": {
+      "zscaler_dev/zscalernss-web:clone": [
+        17,
+        67
+      ],
+      "zscaler_dev/zscalernss-fw:clone": [
+        17,
+        67
+      ],
+      "zscaler_dev/zscalernss-dns:clone": [
+        17,
+        67
+      ]
+    },
+    "default": {}
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "description": "PROD only, no dev route. Control: 1000 in, 1000 out to prod untouched.",
+  "dests": {
+    "prod": {
+      "zscaler/zscalernss-web": 334,
+      "zscaler/zscalernss-fw": 333,
+      "zscaler/zscalernss-dns": 333
+    },
+    "dev": {},
+    "default": {}
+  }
+}

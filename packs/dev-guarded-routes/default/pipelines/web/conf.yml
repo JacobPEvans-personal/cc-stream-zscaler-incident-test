@@ -1,0 +1,12 @@
+output: default
+functions:
+  - id: eval
+    filter: "true"
+    disabled: false
+    description: Overwrite index/sourcetype for the dev Splunk index (end of dev pipeline)
+    conf:
+      add:
+        - name: index
+          value: "'zscaler_dev'"
+        - name: sourcetype
+          value: "sourcetype + ':clone'"

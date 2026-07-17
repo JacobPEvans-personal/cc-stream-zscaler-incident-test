@@ -1,0 +1,6 @@
+output: default
+functions:
+  - id: drop
+    filter: "true"
+    disabled: false
+    conf: {}

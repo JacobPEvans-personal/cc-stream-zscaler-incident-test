@@ -1,0 +1,7 @@
+{
+  "name": "prod-pack",
+  "version": "1.0.0",
+  "displayName": "Zscaler PROD replica",
+  "description": "Simplified replica of the production Zscaler pack: internal route table (drop-empty, web/fw/dns by sourcetype), passthrough pipelines that do NOT modify index/sourcetype.",
+  "minLogStreamVersion": "4.16.0"
+}
