@@ -41,9 +41,9 @@ PROD only, no dev route. Control: 1000 in, 1000 out to prod untouched.
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
@@ -86,11 +86,11 @@ THE INCIDENT: dev route (Final=off, no clone marker), dev pack overwrites index/
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| dev["Dev / test (Splunk)"]
+  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| default["Lost — matched no route"]
   style default fill:#eee,stroke:#999
@@ -133,11 +133,11 @@ Support's fix: route adds clone:true to cloned events; the overwrite eval inside
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+10 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+10 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+10 live)"| dev["Dev / test (Splunk)"]
+  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| default["Lost — matched no route"]
   style default fill:#eee,stroke:#999
@@ -180,9 +180,9 @@ Mis-scoped guard: clone==true added to the WG dev route FILTER itself. The field
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
@@ -225,11 +225,11 @@ Pre-incident steady state: unguarded overwrite but sampling 1:10 as first dev pi
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+10 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+156 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+10 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+156 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"100 (+3 live)"| dev["Dev / test (Splunk)"]
+  C -->|"101 (+5 live)"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| default["Lost — matched no route"]
   style default fill:#eee,stroke:#999
@@ -247,9 +247,9 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 | s3 | zscaler/zscalernss-dns | 333 | 333 |
 | s3 | zscaler/zscalernss-fw | 333 | 333 |
 | s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | zscaler_dev/zscalernss-dns:clone | 34 | 17–67 |
-| dev | zscaler_dev/zscalernss-fw:clone | 33 | 17–67 |
-| dev | zscaler_dev/zscalernss-web:clone | 33 | 17–67 |
+| dev | zscaler_dev/zscalernss-dns:clone | 33 | 17–67 |
+| dev | zscaler_dev/zscalernss-fw:clone | 34 | 17–67 |
+| dev | zscaler_dev/zscalernss-web:clone | 34 | 17–67 |
 | default | (none) | 0 | 0 |
 
 </details>
@@ -272,11 +272,11 @@ Guard placed on the dev pack's INTERNAL route filters (sourcetype && clone==true
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| dev["Dev / test (Splunk)"]
+  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| default["Lost — matched no route"]
   style default fill:#eee,stroke:#999
@@ -319,11 +319,11 @@ UI 'Add clone' left empty: clones: [{}] on the dev route (adds no fields), ungua
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| dev["Dev / test (Splunk)"]
+  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| default["Lost — matched no route"]
   style default fill:#eee,stroke:#999
@@ -366,9 +366,9 @@ PROD dual destination shape (Splunk + S3): two same-filter routes, prod-a Final=
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
@@ -411,11 +411,11 @@ THE CRITICAL CASE: prod + dev routes; dev pipelines contain the sampling functio
 ```mermaid
 flowchart LR
   IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
   style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| s3["Archive (S3)"]
+  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
   style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+8 live)"| dev["Dev / test (Splunk)"]
+  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
   style dev fill:#d3f9d8,stroke:#2b8a3e
   C -->|"0"| default["Lost — matched no route"]
   style default fill:#eee,stroke:#999

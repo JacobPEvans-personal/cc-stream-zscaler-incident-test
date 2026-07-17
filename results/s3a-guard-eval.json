@@ -21,7 +21,7 @@
         "zscaler/zscalernss-fw": 333,
         "zscaler/zscalernss-dns": 333
       },
-      "live": 10
+      "live": 46
     },
     "s3": {
       "actual": {
@@ -34,7 +34,7 @@
         "zscaler/zscalernss-fw": 333,
         "zscaler/zscalernss-dns": 333
       },
-      "live": 10
+      "live": 46
     },
     "dev": {
       "actual": {
@@ -47,7 +47,7 @@
         "zscaler_dev/zscalernss-fw:clone": 333,
         "zscaler_dev/zscalernss-dns:clone": 333
       },
-      "live": 10
+      "live": 46
     },
     "default": {
       "actual": {},
