@@ -2,6 +2,15 @@ name: Incident Matrix
 
 on:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner label (use your self-hosted label to inspect Cribl afterward)
+        type: string
+        default: ubuntu-latest
+      hold_minutes:
+        description: Keep the last scenario's Cribl instance alive this many minutes after the run (only reachable on a self-hosted runner)
+        type: number
+        default: 0
   pull_request:
     paths:
       - 'e2e/**'
@@ -15,14 +24,24 @@ permissions:
 
 jobs:
   matrix:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
       - name: Run all scenarios
+        env:
+          KEEP: ${{ (inputs.hold_minutes || 0) > 0 && '1' || '' }}
         run: node --experimental-strip-types e2e/run.ts scenarios/*
+      - name: Hold Cribl for inspection
+        if: (inputs.hold_minutes || 0) > 0
+        env:
+          HOLD_MINUTES: ${{ inputs.hold_minutes }}
+        run: |
+          echo "Cribl UI: http://<runner-host>:19000 (admin/admin) for $HOLD_MINUTES minutes"
+          sleep $(( HOLD_MINUTES * 60 ))
+          docker rm -f cribl-incident
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4

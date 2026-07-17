@@ -264,10 +264,19 @@ export async function runScenario(scenarioDir: string): Promise<ScenarioResult> 
       pass,
     };
   } finally {
-    try {
-      docker("rm", "-f", CONTAINER);
-    } catch {
-      /* already gone */
+    // KEEP=1 leaves the last scenario's container running so you can log in
+    // at http://localhost:19000 (admin/admin) and inspect routes/pipelines.
+    // The next scenario (or run) still recycles it via `docker rm -f`.
+    if (process.env.KEEP === "1") {
+      console.error(
+        `container ${CONTAINER} kept alive — Cribl UI: http://localhost:${API_PORT} (admin/admin)`,
+      );
+    } else {
+      try {
+        docker("rm", "-f", CONTAINER);
+      } catch {
+        /* already gone */
+      }
     }
   }
 }
