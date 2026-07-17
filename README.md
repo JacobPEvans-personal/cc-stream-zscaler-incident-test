@@ -32,6 +32,44 @@ In GitHub Actions: run the **Incident Matrix** workflow (`workflow_dispatch`).
 It writes the per-scenario table to the run's Step Summary, uploads
 `results/` as an artifact, and commits the refreshed `REPORT.md`.
 
+## Inspecting a live Cribl instance
+
+Set `KEEP=1` to skip teardown after the last scenario, then log in at
+<http://localhost:19000> (admin/admin) and click through the exact routes,
+packs, and pipelines the run used:
+
+```bash
+KEEP=1 node --experimental-strip-types e2e/run.ts scenarios/s2-incident-unguarded
+```
+
+The next run recycles the container; remove it manually with
+`docker rm -f cribl-incident`.
+
+### Inspecting CI runs
+
+The workflow takes two `workflow_dispatch` inputs:
+
+- `runner` — runner label (default `ubuntu-latest`)
+- `hold_minutes` — keep the last scenario's Cribl alive this long before
+  teardown (implies `KEEP=1`)
+
+On GitHub-hosted runners there is no network path to the held container, so
+these inputs only pay off with connectivity. Options, in order of preference:
+
+1. **Reproduce locally with `KEEP=1`** — CI runs the identical config, so a
+   local run is a faithful replica. Almost always enough.
+2. **Tailscale on the GitHub-hosted runner** — add a
+   [`tailscale/github-action`](https://github.com/tailscale/github-action)
+   step with an ephemeral auth-key secret and browse the held instance over
+   your tailnet. Works on public repos without self-hosted infrastructure.
+3. **Self-hosted runner** — pass its label as `runner` plus a `hold_minutes`
+   value, then browse `http://<runner-host>:19000` on your LAN during the
+   hold. **Caveat:** GitHub advises against self-hosted runners on public
+   repositories (fork PRs can execute code on your machine). Keep "require
+   approval for all outside collaborators" enabled, use a dedicated runner
+   group, isolate the runner host on its own network segment — or make this
+   repo private first.
+
 ## Scenarios
 
 | Scenario | Question it answers |
