@@ -20,7 +20,8 @@
         "zscaler/zscalernss-web": 334,
         "zscaler/zscalernss-fw": 333,
         "zscaler/zscalernss-dns": 333
-      }
+      },
+      "live": 8
     },
     "s3": {
       "actual": {
@@ -32,15 +33,18 @@
         "zscaler/zscalernss-web": 334,
         "zscaler/zscalernss-fw": 333,
         "zscaler/zscalernss-dns": 333
-      }
+      },
+      "live": 8
     },
     "dev": {
       "actual": {},
-      "expected": {}
+      "expected": {},
+      "live": 0
     },
     "default": {
       "actual": {},
-      "expected": {}
+      "expected": {},
+      "live": 0
     }
   },
   "pass": true

@@ -1,6 +1,23 @@
 inputs:
+  # Controlled input: the runner pushes exactly 1000 sequence-numbered events
+  # here. Pass/fail verdicts count ONLY these (every event is accounted for).
   tcpjson-in:
     type: tcpjson
     disabled: false
     host: 0.0.0.0
     port: 10070
+  # Live traffic generator: replays the built-in syslog sample continuously,
+  # stamped with a random Zscaler sourcetype so every event matches the same
+  # routes/pipelines as real traffic. Makes the sandbox look and behave like
+  # a live environment; excluded from pass/fail counts (no seq number).
+  syslog-zscaler:
+    type: datagen
+    disabled: false
+    samples:
+      - sample: syslog
+        eventsPerSec: 10
+    metadata:
+      - name: index
+        value: "'zscaler'"
+      - name: sourcetype
+        value: "['zscalernss-web','zscalernss-fw','zscalernss-dns'][Math.floor(Math.random()*3)]"

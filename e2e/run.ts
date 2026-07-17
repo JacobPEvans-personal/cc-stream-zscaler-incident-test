@@ -10,11 +10,14 @@
 import { execFileSync } from "node:child_process";
 import {
   appendFileSync,
+  cpSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   realpathSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
@@ -39,50 +42,50 @@ function startCribl(scenarioDir: string, outDir: string): void {
   } catch {
     /* not running */
   }
-  // Shared plumbing (input, destinations, passthrough pipeline) comes from
-  // common/; each scenario contributes its route table and pack choices.
-  const mounts = [
-    "-v",
-    `${realpathSync("common/inputs.yml")}:/opt/cribl/local/cribl/inputs.yml`,
-  ];
-  // KEEP runs mount the captured first-login state so the kept instance
-  // skips the registration wizard and forced password change. Capture all
-  // three from a registered container (the hash only validates alongside the
-  // SAME instance's cribl.secret):
-  //   for f in users.json cribl.secret 676f6174733432.dat; do
-  //     docker cp cribl-incident:/opt/cribl/local/cribl/auth/$f common/first-login/; done
-  // The dir is gitignored (email, instance secret, crackable hash — never
-  // commit). With it mounted admin/admin no longer works: set CRIBL_PASSWORD.
-  if (process.env.KEEP === "1" && existsSync("common/first-login/users.json")) {
-    for (const f of readdirSync("common/first-login")) {
-      mounts.push(
-        "-v",
-        `${realpathSync(join("common/first-login", f))}:/opt/cribl/local/cribl/auth/${f}`,
-      );
-    }
-  }
-  mounts.push(
-    "-v",
-    `${realpathSync("common/outputs.yml")}:/opt/cribl/local/cribl/outputs.yml`,
-    "-v",
-    `${realpathSync(join(scenarioDir, "route.yml"))}:/opt/cribl/local/cribl/pipelines/route.yml`,
-    "-v",
-    `${realpathSync("common/pipelines/passthrough")}:/opt/cribl/local/cribl/pipelines/passthrough`,
-  );
+  // Config is COPIED in (docker cp) rather than bind-mounted: Cribl persists
+  // config via rename(), which fails (EBUSY) over bind-mounted files — UI
+  // edits would silently not persist and Cribl's internal git would fight
+  // the mounts. With copies, Cribl fully owns its files and every scenario's
+  // config can be committed in Cribl like a real change.
   docker(
-    "run",
-    "-d",
+    "create",
     "--name",
     CONTAINER,
     "-p",
     `${API_PORT}:9000`,
     "-p",
     `${TCP_PORT}:10070`,
-    ...mounts,
     "-v",
     `${outDir}:/tmp/out`,
     IMAGE,
   );
+  // Stage the whole local/cribl tree, then copy it in one shot (the image
+  // has no /opt/cribl/local until first boot). Shared plumbing (inputs incl.
+  // the syslog-zscaler datagen, destinations, passthrough pipeline) comes
+  // from common/; each scenario contributes its route table and pack choices.
+  const stage = mkdtempSync(join(tmpdir(), "cribl-local-"));
+  const croot = join(stage, "cribl");
+  mkdirSync(join(croot, "pipelines"), { recursive: true });
+  cpSync("common/inputs.yml", join(croot, "inputs.yml"));
+  cpSync("common/outputs.yml", join(croot, "outputs.yml"));
+  cpSync("common/pipelines/passthrough", join(croot, "pipelines/passthrough"), {
+    recursive: true,
+  });
+  cpSync(join(scenarioDir, "route.yml"), join(croot, "pipelines/route.yml"));
+  // KEEP runs get the captured first-login state so the kept instance skips
+  // the registration wizard and forced password change. Capture all three
+  // from a registered container (the hash only validates alongside the SAME
+  // instance's cribl.secret):
+  //   for f in users.json cribl.secret 676f6174733432.dat; do
+  //     docker cp cribl-incident:/opt/cribl/local/cribl/auth/$f common/first-login/; done
+  // The dir is gitignored (email, instance secret, crackable hash — never
+  // commit). With it in place admin/admin no longer works: set CRIBL_PASSWORD.
+  if (process.env.KEEP === "1" && existsSync("common/first-login/users.json")) {
+    cpSync("common/first-login", join(croot, "auth"), { recursive: true });
+  }
+  docker("cp", stage, `${CONTAINER}:/opt/cribl/local`);
+  rmSync(stage, { recursive: true, force: true });
+  docker("start", CONTAINER);
 }
 
 async function waitHealthy(timeoutSec = 90): Promise<void> {
@@ -106,7 +109,6 @@ async function waitHealthy(timeoutSec = 90): Promise<void> {
 // failed boot's rollback deletes the mounted host files) — install via API.
 async function installPacks(scenarioDir: string): Promise<void> {
   const packsDir = join(scenarioDir, "packs");
-  if (!existsSync(packsDir)) return;
   const base = `http://localhost:${API_PORT}/api/v1`;
   const login = await fetch(`${base}/auth/login`, {
     method: "POST",
@@ -122,7 +124,7 @@ async function installPacks(scenarioDir: string): Promise<void> {
     );
   const { token } = (await login.json()) as { token: string };
   const auth = { Authorization: `Bearer ${token}` };
-  for (const packId of readdirSync(packsDir)) {
+  for (const packId of existsSync(packsDir) ? readdirSync(packsDir) : []) {
     const dir = realpathSync(join(packsDir, packId));
     const crbl = execFileSync(
       "tar",
@@ -143,6 +145,15 @@ async function installPacks(scenarioDir: string): Promise<void> {
     if (!res.ok)
       throw new Error(`pack install ${packId} failed: ${await res.text()}`);
   }
+  // Commit the scenario's full config in Cribl's internal git before any
+  // data flows — same discipline as a real change (no uncommitted state).
+  const commit = await fetch(`${base}/version/commit`, {
+    method: "POST",
+    headers: { ...auth, "Content-Type": "application/json" },
+    body: JSON.stringify({ message: `scenario ${basename(scenarioDir)}` }),
+  });
+  if (!commit.ok)
+    throw new Error(`cribl config commit failed: ${await commit.text()}`);
   // Routes referencing pack:<id> bound before the pack existed stay
   // unresolved — restart so the route table re-binds to the installed packs.
   docker("restart", CONTAINER);
@@ -212,10 +223,14 @@ function readDest(outDir: string, dest: string): EventShape[] {
   );
 }
 
+// Controlled events carry a numeric seq; live-generator (datagen) events
+// don't. Verdicts count only controlled events so every one is accountable.
+const isControlled = (e: EventShape): boolean => typeof e.seq === "number";
+
 // Unique-seq counts per "index/sourcetype" within one destination.
 function breakdown(events: EventShape[]): Record<string, number> {
   const seqs = new Map<string, Set<unknown>>();
-  for (const e of events) {
+  for (const e of events.filter(isControlled)) {
     const key = `${e.index}/${e.sourcetype}`;
     if (!seqs.has(key)) seqs.set(key, new Set());
     seqs.get(key)?.add(e.seq);
@@ -232,7 +247,11 @@ async function waitForFlush(
   let prev = "";
   while (Date.now() < deadline) {
     await sleep(5000);
-    const counts = dests.map((d) => readDest(outDir, d).length).join(",");
+    // Stability is judged on controlled (seq-numbered) events only — the
+    // live datagen writes continuously and would never let raw counts settle.
+    const counts = dests
+      .map((d) => readDest(outDir, d).filter(isControlled).length)
+      .join(",");
     if (counts === prev && counts !== dests.map(() => 0).join(",")) return;
     prev = counts;
   }
@@ -254,7 +273,11 @@ export interface ScenarioResult {
   sent: number;
   dests: Record<
     string,
-    { actual: Record<string, number>; expected: Record<string, Expectation> }
+    {
+      actual: Record<string, number>;
+      expected: Record<string, Expectation>;
+      live: number;
+    }
   >;
   pass: boolean;
 }
@@ -274,15 +297,26 @@ export async function runScenario(scenarioDir: string): Promise<ScenarioResult> 
   try {
     await waitHealthy();
     await installPacks(scenarioDir);
+    // Live-generator events emitted before the committed config finished
+    // loading are excluded by timestamp (deleting them instead would rip
+    // open files out from under Cribl's filesystem destination).
+    const cutoff = Date.now() / 1000;
     const events = makeEvents(EVENT_COUNT);
     await sendEvents(events);
     await waitForFlush(outDir, destNames);
     let pass = true;
     const dests: ScenarioResult["dests"] = {};
     for (const d of destNames) {
-      const actual = breakdown(readDest(outDir, d));
+      const destEvents = readDest(outDir, d);
+      const actual = breakdown(destEvents);
       const expected = expect.dests[d];
-      dests[d] = { actual, expected };
+      dests[d] = {
+        actual,
+        expected,
+        live: destEvents.filter(
+          (e) => !isControlled(e) && (e._time as number) >= cutoff,
+        ).length,
+      };
       const keys = new Set([...Object.keys(actual), ...Object.keys(expected)]);
       for (const k of keys) {
         if (!matches(actual[k] ?? 0, expected[k] ?? 0)) pass = false;
@@ -338,13 +372,14 @@ function mermaidFlow(r: ScenarioResult): string {
     "flowchart LR",
     `  IN(["${r.sent.toLocaleString("en-US")} events sent"]) --> C{"Cribl routing"}`,
   ];
-  for (const [dest, { actual, expected }] of Object.entries(r.dests)) {
+  for (const [dest, { actual, expected, live }] of Object.entries(r.dests)) {
     const got = total(actual);
     const ok = Object.keys({ ...actual, ...expected }).every((k) =>
       matches(actual[k] ?? 0, expected[k] ?? 0),
     );
+    const liveNote = live > 0 ? ` (+${live.toLocaleString("en-US")} live)` : "";
     lines.push(
-      `  C -->|"${got.toLocaleString("en-US")}"| ${dest}["${ok ? "" : "⚠️ "}${DEST_LABELS[dest] ?? dest}"]`,
+      `  C -->|"${got.toLocaleString("en-US")}${liveNote}"| ${dest}["${ok ? "" : "⚠️ "}${DEST_LABELS[dest] ?? dest}"]`,
       `  style ${dest} ${ok ? (dest === "default" ? "fill:#eee,stroke:#999" : "fill:#d3f9d8,stroke:#2b8a3e") : "fill:#ffe3e3,stroke:#c92a2a"}`,
     );
   }
@@ -366,6 +401,10 @@ export function reportMarkdown(results: ScenarioResult[]): string {
     "",
     `In every test below, exactly **${results[0]?.sent.toLocaleString("en-US") ?? "1,000"} events** were sent into a real Cribl`,
     "instance, and we counted exactly where every single event ended up.",
+    "A live traffic generator (`syslog-zscaler`) also runs the whole time so",
+    "the instance behaves like a real environment — its events are shown as",
+    "“+N live” but only the 1,000 tracked events decide pass/fail.",
+    "Each test's configuration is committed in Cribl before any data flows.",
     "Each test uses a different routing configuration — the point is to see",
     "whether the dev/test route can ever make production lose data.",
     "",
