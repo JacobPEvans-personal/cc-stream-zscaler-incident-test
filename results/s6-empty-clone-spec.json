@@ -2,10 +2,10 @@
   "scenario": "s6-empty-clone-spec",
   "title": "UI 'Add clone' clicked but left empty",
   "setup": {
-    "dev": "✅ on, 'Add clone' clicked but left empty",
-    "sampling": "🔴 off",
-    "rename": "✅ on",
-    "guard": "❌ none"
+    "dev": "On — Final toggle off; UI Add Clone clicked but left empty",
+    "sampling": "Off",
+    "rename": "On, at the end of each pipeline",
+    "guard": "None"
   },
   "description": "UI 'Add clone' left empty: clones: [{}] on the dev route (adds no fields), unguarded dev pack. Distinguishes empty-clone-spec semantics from clones: [].",
   "sent": 1000,

@@ -353,13 +353,25 @@ function fmtExpected(e: Expectation): string {
   return Array.isArray(e) ? `${e[0]}–${e[1]}` : String(e);
 }
 
-// Human-friendly destination labels for the plain-language report.
+// Human-friendly destination labels, in Route-table order (the dev Route
+// sits above the production Route, whose Output Router hits S3 then Splunk).
 const DEST_LABELS: Record<string, string> = {
+  dev: "Dev (Splunk)",
+  s3: "Production (S3)",
   prod: "Production (Splunk)",
-  s3: "Archive (S3)",
-  dev: "Dev / test (Splunk)",
-  default: "Lost — matched no route",
+  default: "Lost — matched no Route",
 };
+const DEST_ORDER = Object.keys(DEST_LABELS);
+
+// Brand palette (docs / docs-starlight): teal accent ramp on dark navy.
+const MERMAID_INIT = `%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%`;
+const BOX_OK = "fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6";
+const BOX_FAIL = "fill:#b3261e,stroke:#ffd8d6,stroke-width:2px,color:#ffffff";
+const BOX_NEUTRAL = "fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd";
 
 const total = (counts: Record<string, number>): number =>
   Object.values(counts).reduce((a, b) => a + b, 0);
@@ -369,18 +381,24 @@ const total = (counts: Record<string, number>): number =>
 function mermaidFlow(r: ScenarioResult): string {
   const lines = [
     "```mermaid",
+    MERMAID_INIT,
     "flowchart LR",
-    `  IN(["${r.sent.toLocaleString("en-US")} events sent"]) --> C{"Cribl routing"}`,
+    `  IN(["${r.sent.toLocaleString("en-US")} events sent"]) --> C{"Cribl Routes"}`,
   ];
-  for (const [dest, { actual, expected, live }] of Object.entries(r.dests)) {
+  const destNames = Object.keys(r.dests).sort(
+    (a, b) => DEST_ORDER.indexOf(a) - DEST_ORDER.indexOf(b),
+  );
+  for (const dest of destNames) {
+    const { actual, expected, live } = r.dests[dest];
     const got = total(actual);
     const ok = Object.keys({ ...actual, ...expected }).every((k) =>
       matches(actual[k] ?? 0, expected[k] ?? 0),
     );
     const liveNote = live > 0 ? ` (+${live.toLocaleString("en-US")} live)` : "";
+    const box = ok ? (got === 0 ? BOX_NEUTRAL : BOX_OK) : BOX_FAIL;
     lines.push(
       `  C -->|"${got.toLocaleString("en-US")}${liveNote}"| ${dest}["${ok ? "" : "⚠️ "}${DEST_LABELS[dest] ?? dest}"]`,
-      `  style ${dest} ${ok ? (dest === "default" ? "fill:#eee,stroke:#999" : "fill:#d3f9d8,stroke:#2b8a3e") : "fill:#ffe3e3,stroke:#c92a2a"}`,
+      `  style ${dest} ${box}`,
     );
   }
   lines.push("```");
@@ -420,9 +438,9 @@ export function reportMarkdown(results: ScenarioResult[]): string {
   ];
   for (const r of results) {
     const SETUP_LABELS: Record<string, string> = {
-      dev: "Dev/test route",
+      dev: "Dev Route",
       sampling: "Dev sampling",
-      rename: "Dev renames index/sourcetype",
+      rename: "Renames index/sourcetype",
       guard: "Guard on the rename",
     };
     lines.push(
@@ -453,13 +471,18 @@ export function reportMarkdown(results: ScenarioResult[]): string {
       "| Destination | index/sourcetype | Actual | Expected |",
       "| --- | --- | --- | --- |",
     );
-    for (const [dest, { actual, expected }] of Object.entries(r.dests)) {
+    const detailOrder = Object.keys(r.dests).sort(
+      (a, b) => DEST_ORDER.indexOf(a) - DEST_ORDER.indexOf(b),
+    );
+    for (const dest of detailOrder) {
+      const { actual, expected } = r.dests[dest];
+      const label = DEST_LABELS[dest] ?? dest;
       const keys = [...new Set([...Object.keys(actual), ...Object.keys(expected)])].sort();
-      if (keys.length === 0) lines.push(`| ${dest} | (none) | 0 | 0 |`);
+      if (keys.length === 0) lines.push(`| ${label} | (none) | 0 | 0 |`);
       for (const k of keys) {
         const ok = matches(actual[k] ?? 0, expected[k] ?? 0);
         lines.push(
-          `| ${dest} | ${k} | ${actual[k] ?? 0}${ok ? "" : " ⚠️"} | ${fmtExpected(expected[k] ?? 0)} |`,
+          `| ${label} | ${k} | ${actual[k] ?? 0}${ok ? "" : " ⚠️"} | ${fmtExpected(expected[k] ?? 0)} |`,
         );
       }
     }

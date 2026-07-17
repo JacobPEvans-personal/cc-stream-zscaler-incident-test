@@ -1,10 +1,10 @@
 {
   "title": "Control test: production alone, nothing else configured",
   "setup": {
-    "dev": "❌ absent",
-    "sampling": "—",
-    "rename": "—",
-    "guard": "—"
+    "dev": "Not configured",
+    "sampling": "Not applicable",
+    "rename": "Not applicable",
+    "guard": "Not applicable"
   },
   "description": "PROD only, no dev route. Control: 1000 in, 1000 out to prod untouched.",
   "dests": {

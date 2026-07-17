@@ -16,16 +16,24 @@ route's sampling was switched off. Cribl support blamed the dev route
 exact setup in a disposable sandbox and measures what actually happens.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  Z["Zscaler logs<br/>(1,000 test events)"] --> WG{"Cribl<br/>route table"}
-  WG -->|"copy of every event"| DEV["Dev route<br/>(renames index/sourcetype)"]
-  WG -->|"original events"| PROD["Production route"]
+  Z["Zscaler logs<br/>(1,000 test events)"] --> WG{"Cribl Routes"}
+  WG -->|"clone of every event<br/>(Final toggle off)"| DEV["Dev Route<br/>(renames index/sourcetype)"]
+  DEV --> DSPL["Dev (Splunk)"]
+  WG -->|"original events"| PROD["Production Route"]
   PROD --> RTR{{"Output Router"}}
-  RTR --> SPL["Splunk (prod)"]
-  RTR --> S3["S3 archive"]
-  DEV --> DSPL["Splunk (dev)"]
-  WG -->|"anything unmatched"| LOST["Lost bucket"]
-  style LOST fill:#eee,stroke:#999
+  RTR --> S3["Production (S3)"]
+  RTR --> SPL["Production (Splunk)"]
+  WG -->|"anything unmatched"| LOST["Lost — matched no Route"]
+  style DSPL fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  style S3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  style SPL fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  style LOST fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 The production route sends to **two** destinations through an Output Router

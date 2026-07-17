@@ -1,10 +1,10 @@
 {
   "title": "Alternative guard placement (on the pack's internal routes)",
   "setup": {
-    "dev": "✅ on, copies every event",
-    "sampling": "🔴 off",
-    "rename": "✅ on",
-    "guard": "✅ on the pack's internal routes"
+    "dev": "On — Final toggle off; clone: true added to cloned events",
+    "sampling": "Off",
+    "rename": "On, at the end of each pipeline",
+    "guard": "On the dev Pack's internal Routes"
   },
   "description": "Guard placed on the dev pack's INTERNAL route filters (sourcetype && clone==true) instead of the eval. All entrants are clones, so behavior should match s3a.",
   "dests": {

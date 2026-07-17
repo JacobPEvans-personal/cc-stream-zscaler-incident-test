@@ -31,24 +31,29 @@ PROD only, no dev route. Control: 1000 in, 1000 out to prod untouched.
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ❌ absent |
-| Dev sampling | — |
-| Dev renames index/sourcetype | — |
-| Guard on the rename | — |
+| Dev Route | Not configured |
+| Dev sampling | Not applicable |
+| Renames index/sourcetype | Not applicable |
+| Guard on the rename | Not applicable |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"0"| dev["Dev (Splunk)"]
+  style dev fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
+  C -->|"1,000 (+8 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -57,14 +62,14 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | (none) | 0 | 0 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | (none) | 0 | 0 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
@@ -76,24 +81,29 @@ THE INCIDENT: dev route (Final=off, no clone marker), dev pack overwrites index/
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ✅ on, copies every event |
-| Dev sampling | 🔴 off |
-| Dev renames index/sourcetype | ✅ on |
-| Guard on the rename | ❌ none |
+| Dev Route | On — Final toggle off (each matched event is cloned into the dev Pack; the original continues down the Routes) |
+| Dev sampling | Off |
+| Renames index/sourcetype | On, at the end of each pipeline |
+| Guard on the rename | None |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"1,000 (+8 live)"| dev["Dev (Splunk)"]
+  style dev fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -102,16 +112,16 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-web:clone | 334 | 334 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-web:clone | 334 | 334 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
@@ -123,24 +133,29 @@ Support's fix: route adds clone:true to cloned events; the overwrite eval inside
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ✅ on, copies every event |
-| Dev sampling | 🔴 off |
-| Dev renames index/sourcetype | ✅ on |
-| Guard on the rename | ✅ on the rename step |
+| Dev Route | On — Final toggle off; clone: true added to cloned events |
+| Dev sampling | Off |
+| Renames index/sourcetype | On, at the end of each pipeline |
+| Guard on the rename | On the rename Function (runs only when clone==true) |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"1,000 (+10 live)"| dev["Dev (Splunk)"]
+  style dev fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+10 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+10 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -149,16 +164,16 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-web:clone | 334 | 334 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-web:clone | 334 | 334 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
@@ -170,24 +185,29 @@ Mis-scoped guard: clone==true added to the WG dev route FILTER itself. The field
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ⚠️ on, but guard in its filter blocks everything |
-| Dev sampling | 🔴 off |
-| Dev renames index/sourcetype | ✅ on |
-| Guard on the rename | ⚠️ in the route filter (wrong place) |
+| Dev Route | On — Final toggle off, but clone==true in its Route filter can never match |
+| Dev sampling | Off |
+| Renames index/sourcetype | On, at the end of each pipeline |
+| Guard on the rename | In the Route filter (wrong place) |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"0"| dev["Dev (Splunk)"]
+  style dev fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
+  C -->|"1,000 (+8 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -196,14 +216,14 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | (none) | 0 | 0 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | (none) | 0 | 0 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
@@ -215,24 +235,29 @@ Pre-incident steady state: unguarded overwrite but sampling 1:10 as first dev pi
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ✅ on, copies every event |
-| Dev sampling | 🟢 1-in-10 |
-| Dev renames index/sourcetype | ✅ on |
-| Guard on the rename | ❌ none |
+| Dev Route | On — Final toggle off |
+| Dev sampling | On (1 in 10) |
+| Renames index/sourcetype | On, at the end of each pipeline |
+| Guard on the rename | None |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+156 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+156 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"101 (+5 live)"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"100 (+3 live)"| dev["Dev (Splunk)"]
+  style dev fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+10 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+10 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -241,16 +266,16 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | zscaler_dev/zscalernss-dns:clone | 33 | 17–67 |
-| dev | zscaler_dev/zscalernss-fw:clone | 34 | 17–67 |
-| dev | zscaler_dev/zscalernss-web:clone | 34 | 17–67 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | zscaler_dev/zscalernss-dns:clone | 34 | 17–67 |
+| Dev (Splunk) | zscaler_dev/zscalernss-fw:clone | 33 | 17–67 |
+| Dev (Splunk) | zscaler_dev/zscalernss-web:clone | 33 | 17–67 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
@@ -262,24 +287,29 @@ Guard placed on the dev pack's INTERNAL route filters (sourcetype && clone==true
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ✅ on, copies every event |
-| Dev sampling | 🔴 off |
-| Dev renames index/sourcetype | ✅ on |
-| Guard on the rename | ✅ on the pack's internal routes |
+| Dev Route | On — Final toggle off; clone: true added to cloned events |
+| Dev sampling | Off |
+| Renames index/sourcetype | On, at the end of each pipeline |
+| Guard on the rename | On the dev Pack's internal Routes |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"1,000 (+8 live)"| dev["Dev (Splunk)"]
+  style dev fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -288,16 +318,16 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-web:clone | 334 | 334 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-web:clone | 334 | 334 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
@@ -309,24 +339,29 @@ UI 'Add clone' left empty: clones: [{}] on the dev route (adds no fields), ungua
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ✅ on, 'Add clone' clicked but left empty |
-| Dev sampling | 🔴 off |
-| Dev renames index/sourcetype | ✅ on |
-| Guard on the rename | ❌ none |
+| Dev Route | On — Final toggle off; UI Add Clone clicked but left empty |
+| Dev sampling | Off |
+| Renames index/sourcetype | On, at the end of each pipeline |
+| Guard on the rename | None |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"1,000 (+8 live)"| dev["Dev (Splunk)"]
+  style dev fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -335,16 +370,16 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-web:clone | 334 | 334 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-web:clone | 334 | 334 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
@@ -356,24 +391,29 @@ PROD dual destination shape (Splunk + S3): two same-filter routes, prod-a Final=
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ❌ absent |
-| Dev sampling | — |
-| Dev renames index/sourcetype | — |
-| Guard on the rename | — (two prod routes instead of Output Router) |
+| Dev Route | Not configured |
+| Dev sampling | Not applicable |
+| Renames index/sourcetype | Not applicable |
+| Guard on the rename | Not applicable (two production Routes instead of an Output Router) |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"0"| dev["Dev (Splunk)"]
+  style dev fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
+  C -->|"1,000 (+8 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+8 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -382,14 +422,14 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | (none) | 0 | 0 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | (none) | 0 | 0 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
@@ -401,24 +441,29 @@ THE CRITICAL CASE: prod + dev routes; dev pipelines contain the sampling functio
 
 | Setting | This test |
 | --- | --- |
-| Dev/test route | ✅ on, copies every event (clone marker set) |
-| Dev sampling | ⚪ present but disabled |
-| Dev renames index/sourcetype | ✅ on |
-| Guard on the rename | ❌ none |
+| Dev Route | On — Final toggle off; clone: true added to cloned events |
+| Dev sampling | Present in the pipelines but disabled |
+| Renames index/sourcetype | On, at the end of each pipeline |
+| Guard on the rename | None |
 
 ✅ **No production data was lost.** Production received 1,000 of 1,000 events sent.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "primaryColor": "#0b1d2a", "primaryTextColor": "#f4efe6", "primaryBorderColor": "#4fb3a9",
+  "lineColor": "#4fb3a9", "edgeLabelBackground": "#1f4f4a", "textColor": "#f4efe6",
+  "fontFamily": "ui-sans-serif, sans-serif"
+}}}%%
 flowchart LR
-  IN(["1,000 events sent"]) --> C{"Cribl routing"}
-  C -->|"1,000 (+46 live)"| prod["Production (Splunk)"]
-  style prod fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| s3["Archive (S3)"]
-  style s3 fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"1,000 (+46 live)"| dev["Dev / test (Splunk)"]
-  style dev fill:#d3f9d8,stroke:#2b8a3e
-  C -->|"0"| default["Lost — matched no route"]
-  style default fill:#eee,stroke:#999
+  IN(["1,000 events sent"]) --> C{"Cribl Routes"}
+  C -->|"1,000 (+10 live)"| dev["Dev (Splunk)"]
+  style dev fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+10 live)"| s3["Production (S3)"]
+  style s3 fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"1,000 (+10 live)"| prod["Production (Splunk)"]
+  style prod fill:#2f7e78,stroke:#aee4dd,stroke-width:2px,color:#f4efe6
+  C -->|"0"| default["Lost — matched no Route"]
+  style default fill:#0b1d2a,stroke:#4fb3a9,stroke-dasharray:4,color:#aee4dd
 ```
 
 <details><summary>Detailed counts (click to expand)</summary>
@@ -427,16 +472,16 @@ Sent: 1000 events (index=zscaler, sourcetypes round-robin zscalernss-web, zscale
 
 | Destination | index/sourcetype | Actual | Expected |
 | --- | --- | --- | --- |
-| prod | zscaler/zscalernss-dns | 333 | 333 |
-| prod | zscaler/zscalernss-fw | 333 | 333 |
-| prod | zscaler/zscalernss-web | 334 | 334 |
-| s3 | zscaler/zscalernss-dns | 333 | 333 |
-| s3 | zscaler/zscalernss-fw | 333 | 333 |
-| s3 | zscaler/zscalernss-web | 334 | 334 |
-| dev | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
-| dev | zscaler_dev/zscalernss-web:clone | 334 | 334 |
-| default | (none) | 0 | 0 |
+| Dev (Splunk) | zscaler_dev/zscalernss-dns:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-fw:clone | 333 | 333 |
+| Dev (Splunk) | zscaler_dev/zscalernss-web:clone | 334 | 334 |
+| Production (S3) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (S3) | zscaler/zscalernss-web | 334 | 334 |
+| Production (Splunk) | zscaler/zscalernss-dns | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-fw | 333 | 333 |
+| Production (Splunk) | zscaler/zscalernss-web | 334 | 334 |
+| Lost — matched no Route | (none) | 0 | 0 |
 
 </details>
 
